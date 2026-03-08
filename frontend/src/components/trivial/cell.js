@@ -38,7 +38,7 @@ export function make_cell(app, data, cell_type, cell_name) {
 
 async function download_game(id) {
     const response = await fetch(
-        `http://localhost:8000/api/v1/releases/${id}/download`,
+        `http://192.144.56.245:8000/api/v1/releases/${id}/download`,
         {
             method: 'GET',
         }
