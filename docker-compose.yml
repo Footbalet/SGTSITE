@@ -1,0 +1,109 @@
+version: '3.8'
+
+services:
+  # PostgreSQL
+  postgres:
+    image: postgres:15-alpine
+    container_name: lfl_postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: Impulse101
+      POSTGRES_DB: lfl
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: lfl_backend
+    environment:
+      DB_TYPE: postgres
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: Impulse101
+      DB_NAME: lfl
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  # Gameserver (открываем порт для прямого подключения клиентов)
+  gamemaster:
+    build:
+      context: ./gamemaster
+      dockerfile: Dockerfile
+    container_name: lfl_gamemaster
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: Impulse101
+      DB_NAME: lfl
+    ports:
+      - "8085:8085"  # Прямое подключение клиентов
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  # Frontend React
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: lfl_frontend
+    environment:
+      REACT_APP_API_URL: /api
+      CHOKIDAR_USEPOLLING: "true"
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+      - gamemaster
+    networks:
+      - app-network
+    stdin_open: true
+    tty: true
+
+  # Nginx (только для web-трафика)
+  nginx:
+    image: nginx:alpine
+    container_name: lfl_nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - app-network
+    restart: unless-stopped
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  postgres_data:

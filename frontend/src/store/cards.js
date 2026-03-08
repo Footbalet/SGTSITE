@@ -1,0 +1,47 @@
+export const statsGeneral = [
+        ['Активных игр', 'active_games', 'common'],
+        ['Прерванных игр', 'cancelled_games', 'common'],
+        ['Завершённых игр', 'finished_games', 'common'],
+        ['Всего игр', 'total_games', 'common'],
+        ['Всего игроков в играх', 'total_players', 'common'],
+        ['Игроков на игру', 'avg_players_per_game', 'common'],
+]
+
+export const statsModes = [
+        ['Каждый за себя', 'OneForOne', 'common'],
+        ['Последний герой', 'LastHero', 'common'],
+        ['Царь горы', 'KingOfTheHill', 'common'],
+        ['Гонки', 'Racing', 'common'],
+        ['Командный бой', 'TeamOnTeam', 'common'],
+        ['Захват флага', 'CaptureFlag', 'common'],
+        ['Доминирование', 'Dominating', 'common'],
+        ['Сборщик', 'Harvest', 'common'],
+]
+
+export const statsMaps = [
+        ['EnterHall', 'EnterHall', 'common'],
+        ['PassangerShip', 'PassangerShip', 'common'],
+        ['FinalTest', 'FinalTest', 'common'],
+        ['BadBlock', 'BadBlock', 'common'],
+        ['Library', 'Library', 'common'],
+        ['Foundry', 'Foundry', 'common'],
+        ['SeeBoarding', 'SeeBoarding', 'common'],
+        ['Pier', 'Pier', 'common'],
+        ['Temple', 'Temple', 'common'],
+        ['Park', 'Park', 'common'],
+        ['Castles', 'Castles', 'common'],
+        ['Electro', 'Electro', 'common'],
+        ['Collider', 'Collider', 'common'],
+        ['Midcaffes', 'Midcaffes', 'common'],
+        ['Dungeons', 'Dungeons', 'common'],
+        ['GreatCathedral', 'GreatCathedral', 'common'],
+        ['Galeon', 'Galeon', 'common'],
+        ['Desert', 'Desert', 'common'],
+        ['Dit', 'Dit', 'common'],
+        ['Island', 'Island', 'common'],
+        ['DesertTrain', 'DesertTrain', 'common'],
+        ['Asteroid', 'Asteroid', 'common'],
+        ['Drednout', 'Drednout', 'common'],
+        ['Spacescrapers', 'Spacescrapers', 'common'],
+        ['OceanStation', 'OceanStation', 'common'],
+]
