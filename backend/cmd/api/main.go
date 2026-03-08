@@ -42,7 +42,7 @@ func main() {
 	os.MkdirAll(uploadDir, 0755)
 	baseURL := os.Getenv("BASE_URL")
 	if baseURL == "" {
-		baseURL = "http://localhost:8000"
+		baseURL = "http://192.144.56.245:8000"
 	}
 
 	r.MaxMultipartMemory = 500 << 20 // 500 MB
