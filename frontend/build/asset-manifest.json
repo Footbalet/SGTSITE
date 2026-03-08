@@ -1,0 +1,36 @@
+{
+  "files": {
+    "main.css": "/static/css/main.19f4d876.css",
+    "main.js": "/static/js/main.d2be5f66.js",
+    "static/js/885.98e82e21.chunk.js": "/static/js/885.98e82e21.chunk.js",
+    "static/media/background.png": "/static/media/background.4736adb05771629c2ff6.png",
+    "static/media/PlanFieldNo.png": "/static/media/PlanFieldNo.cd6d08277e9f546ee7f0.png",
+    "static/media/screenGame.png": "/static/media/screenGame.8a337d2379a3adfad64c.png",
+    "static/media/screenSheme.png": "/static/media/screenSheme.4f4c53141efc4b8c1477.png",
+    "static/media/field.png": "/static/media/field.d569f7b384ef74c637e2.png",
+    "static/media/screenMatch.png": "/static/media/screenMatch.83a6fd9885bfc12ba0c0.png",
+    "static/media/screenTeam.png": "/static/media/screenTeam.1f44f916ce85fd4a260e.png",
+    "static/media/screenTransfer.png": "/static/media/screenTransfer.58839ba94652bb1a06e6.png",
+    "static/media/screenLeague.png": "/static/media/screenLeague.e68bb17ea341f933217a.png",
+    "static/media/WhistleBadGame.ogg": "/static/media/WhistleBadGame.4e61c253f626e9aafb8f.ogg",
+    "static/media/BallNetCollide.ogg": "/static/media/BallNetCollide.76964b67ae1ffc63d3fa.ogg",
+    "static/media/BallStop.ogg": "/static/media/BallStop.1d0e6222eb5b7e363450.ogg",
+    "static/media/Loader.png": "/static/media/Loader.aafe859f8496607780b9.png",
+    "static/media/WhistleTimeEnd.ogg": "/static/media/WhistleTimeEnd.1859ef3af40ed3d9e9c6.ogg",
+    "static/media/BallFightHit.ogg": "/static/media/BallFightHit.7876746560dc3b373675.ogg",
+    "static/media/WhistleBallOutAndIn.ogg": "/static/media/WhistleBallOutAndIn.c52a03dcd3e0a56e95e0.ogg",
+    "static/media/BallPostCollide.ogg": "/static/media/BallPostCollide.eec4f9620755001b9e13.ogg",
+    "static/media/BallHitMid.ogg": "/static/media/BallHitMid.1174953a0ab5dceb8b41.ogg",
+    "static/media/BallHitStrong.ogg": "/static/media/BallHitStrong.f0c4a31926ec87f58bdb.ogg",
+    "static/media/BallLand.ogg": "/static/media/BallLand.3e982aaa6cbbdc22d21a.ogg",
+    "static/media/BallGkContact.ogg": "/static/media/BallGkContact.f9fe5fca74722c2aea4f.ogg",
+    "index.html": "/index.html",
+    "main.19f4d876.css.map": "/static/css/main.19f4d876.css.map",
+    "main.d2be5f66.js.map": "/static/js/main.d2be5f66.js.map",
+    "885.98e82e21.chunk.js.map": "/static/js/885.98e82e21.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.19f4d876.css",
+    "static/js/main.d2be5f66.js"
+  ]
+}
