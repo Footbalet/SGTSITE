@@ -5,9 +5,6 @@ export function Head() {
     return (
             <div className={'centerDiv'}>
                 <div className={'head_main'}>
-                    <div className={'head_logo'} onClick={() => {
-                        window.location.href = '/'
-                    }} />
                 </div>
             </div>
     );
