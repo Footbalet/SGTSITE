@@ -264,6 +264,13 @@ func (s *Server) handleConnections(w http.ResponseWriter, r *http.Request) {
 		log.Printf("Ошибка при подключении: %v", err)
 		return
 	}
+	tcpConn := conn.NetConn().(*net.TCPConn)
+	if err := tcpConn.SetNoDelay(true); err != nil { // Отключаем Nagle
+		log.Printf("Ошибка SetNoDelay: %v", err)
+	}
+	if err := tcpConn.SetWriteBuffer(256 * 1024); err != nil { // Увеличиваем буфер
+		log.Printf("Ошибка SetWriteBuffer: %v", err)
+	}
 
 	// Устанавливаем таймауты на соединение
 	if err := conn.SetReadDeadline(time.Now().Add(handshakeTimeout)); err != nil {
