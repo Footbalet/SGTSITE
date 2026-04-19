@@ -93,13 +93,13 @@ type Client struct {
 	privateKey  *rsa.PrivateKey
 	PublicKey   *rsa.PublicKey
 	server      *Server
-	lastActive  time.Time // Для отслеживания неактивных клиентов
+	lastActive  time.Time
 }
 
 type Room struct {
 	owner      *Client
 	clients    []*Client
-	excluded   map[*Client]bool // Используем map для O(1) доступа
+	excluded   map[*Client]bool
 	mapID      string
 	mapName    string
 	gameMode   string
@@ -468,6 +468,22 @@ func xorDecrypt(encryptedText []byte, fastXorKey string) string {
 	return string(result)
 }
 
+//func (s *Server) handleMessages(client *Client) {
+//	defer s.closeConnection(client.conn, client)
+//
+//	for {
+//		select {
+//		case <-s.shutdown:
+//			return
+//		default:
+//			if err := s.processMessage(client); err != nil {
+//				log.Printf("Ошибка при обработке сообщения от клиента %d: %v", client.id, err)
+//				return
+//			}
+//		}
+//	}
+//}
+
 func (s *Server) handleMessages(client *Client) {
 	defer s.closeConnection(client.conn, client)
 
@@ -476,10 +492,26 @@ func (s *Server) handleMessages(client *Client) {
 		case <-s.shutdown:
 			return
 		default:
-			if err := s.processMessage(client); err != nil {
-				log.Printf("Ошибка при обработке сообщения от клиента %d: %v", client.id, err)
+			_, msgByte, err := client.conn.ReadMessage()
+			if err != nil {
+				if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
+					log.Printf("Ошибка чтения от клиента %d: %v", client.id, err)
+				}
 				return
 			}
+
+			client.lastActive = time.Now()
+
+			go func(msg []byte) {
+				msgText := s.decryptMessage(client, msg)
+				for prefix, handler := range s.prefixToCommand {
+					if strings.HasPrefix(msgText, prefix) {
+						handler(client, msgText)
+						return
+					}
+				}
+				log.Printf("Неизвестная команда от клиента %d: %s", client.id, msgText)
+			}(msgByte)
 		}
 	}
 }
