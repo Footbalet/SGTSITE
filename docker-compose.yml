@@ -56,8 +56,8 @@ services:
       DB_PASSWORD: Impulse101
       DB_NAME: lfl
     ports:
-      - "8085:8085"  # Прямое подключение клиентов
-      - "7777:7777"
+      - "8085:8085/tcp"  # Прямое подключение клиентов
+      - "7777:7777/udp"
     depends_on:
       postgres:
         condition: service_healthy
