@@ -1,2 +1,6 @@
+git.pulsenet.dev/pulse/pulsenet v1.0.1 h1:vuriyORT36kuP0KVpSEajZZc6z5ew0SCSCxtF4ojoVk=
+git.pulsenet.dev/pulse/pulsenet v1.0.1/go.mod h1:Epow9tH2+8gT+QwtIJVF+CakRd1c+HYEBPpxFOr0MWU=
+github.com/codecat/go-enet v0.0.0-20250728072647-ae229138f138 h1:qQaqly9oVi84i4nLWmM551z7kcFZIy5koCLoPwCarGY=
+github.com/codecat/go-enet v0.0.0-20250728072647-ae229138f138/go.mod h1:sXkhNvv8T1d/aPEwipUzk7rGWwGJ3uJST2P/Z0zE0L4=
 github.com/gorilla/websocket v1.5.3 h1:saDtZ6Pbx/0u+bgYQ3q96pZgCzfhKXGPqt7kZ72aNNg=
 github.com/gorilla/websocket v1.5.3/go.mod h1:YR8l580nyteQvAITg2hZ9XVh4b55+EU/adAjf1fMHhE=

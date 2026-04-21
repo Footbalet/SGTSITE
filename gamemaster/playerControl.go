@@ -9,6 +9,7 @@ import (
 // Константы для команд
 const (
 	cmdSendCommand      = "send_command"
+	cmdGDZ              = "\u0003   gdz"
 	cmdGD               = "gd"
 	cmdSay              = "say"
 	cmdExcluded         = "excluded"

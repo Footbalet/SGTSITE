@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
+	"github.com/codecat/go-enet"
 	"github.com/gorilla/websocket"
 	"log"
 	"net"
@@ -47,14 +48,16 @@ var upgrader = websocket.Upgrader{
 
 // ClientPool для управления соединениями
 type ClientPool struct {
-	clients map[*Client]bool
-	mu      sync.RWMutex
+	clients     map[*Client]bool
+	clientsByID map[int64]*Client
+	mu          sync.RWMutex
 }
 
 func (cp *ClientPool) Add(client *Client) {
 	cp.mu.Lock()
 	defer cp.mu.Unlock()
 	cp.clients[client] = true
+	cp.clientsByID[client.id] = client
 }
 
 func (cp *ClientPool) Remove(client *Client) {
@@ -68,6 +71,12 @@ func (cp *ClientPool) Exists(client *Client) bool {
 	defer cp.mu.RUnlock()
 	_, exists := cp.clients[client]
 	return exists
+}
+
+func (cp *ClientPool) Get(id int64) *Client {
+	cp.mu.Lock()
+	defer cp.mu.Unlock()
+	return cp.clientsByID[id]
 }
 
 func (cp *ClientPool) Size() int {
@@ -94,6 +103,7 @@ type Client struct {
 	PublicKey   *rsa.PublicKey
 	server      *Server
 	lastActive  time.Time
+	enetID      enet.Peer
 }
 
 type Room struct {
@@ -139,7 +149,7 @@ var byteBufferPool = sync.Pool{
 func NewServer() *Server {
 	s := &Server{
 		rooms:            make(map[int64]*Room),
-		clientPool:       &ClientPool{clients: make(map[*Client]bool)},
+		clientPool:       &ClientPool{clients: make(map[*Client]bool), clientsByID: make(map[int64]*Client)},
 		nextClientID:     1,
 		nextRoomID:       1,
 		broadcast:        make(chan string, 100), // Буферизированный канал
@@ -163,6 +173,7 @@ func NewServer() *Server {
 		"exclude":                  s.excludePlayer,
 		"command":                  s.sendCommand,
 		"send_player_data":         s.sendData,
+		"\u0003   gdz":             s.sendData,
 		"gd":                       s.sendData,
 		"set_room_loaded":          s.setRoomLoaded,
 		"change_rules_room":        s.changeRules,
@@ -500,13 +511,15 @@ func (s *Server) handleMessages(client *Client) {
 			return
 		default:
 			_, msgByte, err := client.conn.ReadMessage()
-			if err != nil {
+			if err != nil && len(msgByte) > 0 {
 				if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
 					log.Printf("Ошибка чтения от клиента %d: %v", client.id, err)
 				}
 				return
 			}
-
+			if len(msgByte) == 0 {
+				return
+			}
 			client.lastActive = time.Now()
 
 			go func(msg []byte) {
@@ -673,11 +686,12 @@ func main() {
 	} else {
 		fmt.Println("Сервер запущен на: http://localhost:8085")
 	}
-
+	go StartServerENET(server)
 	err := http.ListenAndServe(":8085", nil)
 	if err != nil {
 		log.Fatal("Ошибка при запуске сервера:", err)
 	}
+
 }
 
 // Очистка неактивных клиентов
