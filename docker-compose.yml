@@ -57,6 +57,7 @@ services:
       DB_NAME: lfl
     ports:
       - "8085:8085"  # Прямое подключение клиентов
+      - "7777:7777"
     depends_on:
       postgres:
         condition: service_healthy
