@@ -9,7 +9,7 @@ RUN apk add --no-cache gcc musl-dev linux-headers
 COPY server.go .
 COPY playerControl.go .
 COPY roomControl.go .
-COPY serverENET.go.go .
+COPY serverENET.go .
 COPY go.mod go.sum ./
 
 # Скачиваем зависимости
