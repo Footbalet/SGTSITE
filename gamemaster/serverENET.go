@@ -3,8 +3,6 @@ package main
 import (
 	"fmt"
 	"github.com/codecat/go-enet"
-	"strconv"
-	"strings"
 )
 
 func StartServerENET(s *Server) {
@@ -49,34 +47,46 @@ func StartServerENET(s *Server) {
 			defer packet.Destroy()
 
 			// Получаем данные как строку
-			data := string(packet.GetData())
-// 			fmt.Printf("[RECV] %s: %s\n", ev.GetPeer().GetAddress(), data)
-			if strings.HasPrefix(data, "init") {
-				playerID := data[len("init"):]
-				id, _ := strconv.ParseInt(playerID, 10, 64)
-				client := s.clientPool.Get(id)
+			data := packet.GetData()
+			if len(data) < 2 {
+				fmt.Printf("Некорректный пакет: слишком мало данных (%d байт)\n", len(data))
+				continue
+			}
+			commandID := string(data[0:2])
+			payload := data[2:]
+			switch commandID {
+			case "in":
+				if len(payload) < 4 {
+					fmt.Printf("Некорректный init пакет: ожидается 4 байт, получено %d\n", len(payload))
+					continue
+				}
+				playerID := int32(payload[0]) |
+					int32(payload[1])<<8 |
+					int32(payload[2])<<16 |
+					int32(payload[3])<<24
+				client := s.clientPool.Get(int64(playerID))
 				idToClient[ev.GetPeer()] = client
 				client.enetID = ev.GetPeer()
-				fmt.Printf("[++] Клиент инициализирован: %s\n", ev.GetPeer().GetAddress())
-				ev.GetPeer().SendString("Hello", 0, enet.PacketFlagReliable)
-			} else if strings.HasPrefix(data, "gdr") {
+				fmt.Printf("[++] Клиент инициализирован: %s (ID: %d)\n", ev.GetPeer().GetAddress(), playerID)
+				helloData := []byte("Hello")
+				ev.GetPeer().SendBytes(helloData, 0, enet.PacketFlagReliable)
+			case "gr":
 				client := idToClient[ev.GetPeer()]
 				room := s.rooms[client.currentRoom]
 				for _, resident := range room.clients {
 					if resident.ready && resident != client {
-						resident.enetID.SendString(data, 0, enet.PacketFlagReliable)
-						fmt.Printf("Отправлено надёжно: \n")
+						resident.enetID.SendBytes(data, 0, enet.PacketFlagReliable)
 					}
 				}
-			} else if strings.HasPrefix(data, "gdu") {
+			case "gu":
 				client := idToClient[ev.GetPeer()]
 				room := s.rooms[client.currentRoom]
 				for _, resident := range room.clients {
 					if resident.ready && resident != client {
-						resident.enetID.SendString(data, 0, enet.PacketFlagUnsequenced)
+						resident.enetID.SendBytes(data, 0, enet.PacketFlagUnsequenced)
 					}
 				}
-            }
+			}
 		}
 	}
 }
