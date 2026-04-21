@@ -50,7 +50,7 @@ func StartServerENET(s *Server) {
 
 			// Получаем данные как строку
 			data := string(packet.GetData())
-			fmt.Printf("[RECV] %s: %s\n", ev.GetPeer().GetAddress(), data)
+// 			fmt.Printf("[RECV] %s: %s\n", ev.GetPeer().GetAddress(), data)
 			if strings.HasPrefix(data, "init") {
 				playerID := data[len("init"):]
 				id, _ := strconv.ParseInt(playerID, 10, 64)
@@ -59,15 +59,24 @@ func StartServerENET(s *Server) {
 				client.enetID = ev.GetPeer()
 				fmt.Printf("[++] Клиент инициализирован: %s\n", ev.GetPeer().GetAddress())
 				ev.GetPeer().SendString("Hello", 0, enet.PacketFlagReliable)
-			} else if strings.HasPrefix(data, "gd") {
+			} else if strings.HasPrefix(data, "gdr") {
 				client := idToClient[ev.GetPeer()]
 				room := s.rooms[client.currentRoom]
 				for _, resident := range room.clients {
 					if resident.ready && resident != client {
 						resident.enetID.SendString(data, 0, enet.PacketFlagReliable)
+						fmt.Printf("Отправлено надёжно: \n")
 					}
 				}
-			}
+			} else if strings.HasPrefix(data, "gdu") {
+				client := idToClient[ev.GetPeer()]
+				room := s.rooms[client.currentRoom]
+				for _, resident := range room.clients {
+					if resident.ready && resident != client {
+						resident.enetID.SendString(data, 0, enet.PacketFlagUnsequenced)
+					}
+				}
+            }
 		}
 	}
 }
