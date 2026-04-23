@@ -188,6 +188,10 @@ func NewServer() *Server {
 		"leave_game":               s.leaveGame,
 		"returned_to_room":         s.returnToRoom,
 		"restart_the_game":         s.restartGame,
+		"send_offer":               s.sendOffer,
+		"send_answer":              s.sendAnswer,
+		"send_candidate":           s.sendCandidate,
+		"send_connection":          s.sendConnection,
 	}
 
 	return s

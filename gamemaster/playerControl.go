@@ -453,3 +453,55 @@ func (s *Server) fullRoomUpdate(room *Room) {
 		client.sendMessage(cmdNeedReloadData)
 	}
 }
+
+func (s *Server) sendOffer(client *Client, msg string) {
+	logDebug("Отправлено предложение: %s", msg)
+
+	parts := strings.Split(msg, ";")
+	player_id, err := strconv.ParseInt(parts[1], 10, 64)
+	if err != nil {
+		return
+	}
+
+	player := s.clientPool.Get(player_id)
+	player.sendMessage(fmt.Sprintf("%s", msg))
+}
+
+func (s *Server) sendAnswer(client *Client, msg string) {
+	logDebug("Отправлен ответ: %s", msg)
+
+	parts := strings.Split(msg, ";")
+	player_id, err := strconv.ParseInt(parts[1], 10, 64)
+	if err != nil {
+		return
+	}
+
+	player := s.clientPool.Get(player_id)
+	player.sendMessage(fmt.Sprintf("%s", msg))
+}
+
+func (s *Server) sendCandidate(client *Client, msg string) {
+	logDebug("Отправлены кандидаты: %s", msg)
+
+	parts := strings.Split(msg, ";")
+	player_id, err := strconv.ParseInt(parts[1], 10, 64)
+	if err != nil {
+		return
+	}
+
+	player := s.clientPool.Get(player_id)
+	player.sendMessage(fmt.Sprintf("%s", msg))
+}
+
+func (s *Server) sendConnection(client *Client, msg string) {
+	logDebug("Проводим соединение с: %s", msg)
+
+	parts := strings.Split(msg, ";")
+	player_id, err := strconv.ParseInt(parts[1], 10, 64)
+	if err != nil {
+		return
+	}
+
+	player := s.clientPool.Get(player_id)
+	player.sendMessage(fmt.Sprintf("%s", msg))
+}
