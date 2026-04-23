@@ -9,7 +9,6 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
-	"github.com/codecat/go-enet"
 	"github.com/gorilla/websocket"
 	"log"
 	"net"
@@ -103,7 +102,6 @@ type Client struct {
 	PublicKey   *rsa.PublicKey
 	server      *Server
 	lastActive  time.Time
-	enetID      enet.Peer
 }
 
 type Room struct {
@@ -690,7 +688,6 @@ func main() {
 	} else {
 		fmt.Println("Сервер запущен на: http://localhost:8085")
 	}
-	go StartServerENET(server)
 	err := http.ListenAndServe(":8085", nil)
 	if err != nil {
 		log.Fatal("Ошибка при запуске сервера:", err)
