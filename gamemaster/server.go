@@ -9,7 +9,6 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
-	"github.com/codecat/go-enet"
 	"github.com/gorilla/websocket"
 	"log"
 	"net"
@@ -87,23 +86,28 @@ func (cp *ClientPool) Size() int {
 }
 
 type Client struct {
-	conn        *websocket.Conn
-	mu          sync.Mutex
-	name        string
-	appearances string
-	weaponHand  string
-	voice       string
-	isFemale    string
-	currentRoom int64
-	ready       bool
-	team        string
-	id          int64
-	xorKey      string
-	privateKey  *rsa.PrivateKey
-	PublicKey   *rsa.PublicKey
-	server      *Server
-	lastActive  time.Time
-	enetID      enet.Peer
+	conn         *websocket.Conn
+	mu           sync.Mutex
+	name         string
+	appearances  string
+	weaponHand   string
+	voice        string
+	isFemale     string
+	colors       string
+	border_index string
+	border_color string
+	hands_index  string
+	hands_color1 string
+	hands_color2 string
+	currentRoom  int64
+	ready        bool
+	team         string
+	id           int64
+	xorKey       string
+	privateKey   *rsa.PrivateKey
+	PublicKey    *rsa.PublicKey
+	server       *Server
+	lastActive   time.Time
 }
 
 type Room struct {
@@ -192,6 +196,7 @@ func NewServer() *Server {
 		"send_answer":              s.sendAnswer,
 		"send_candidate":           s.sendCandidate,
 		"send_connection":          s.sendConnection,
+		"lost_connection":          s.lostConnection,
 	}
 
 	return s
@@ -337,8 +342,8 @@ func (s *Server) initializeClient(conn *websocket.Conn, clientData []byte) *Clie
 		return nil
 	}
 
-	if len(parts) != 8 {
-		log.Printf("Неверный формат данных клиента: ожидалось 8 полей, получено %d", len(parts))
+	if len(parts) != 14 {
+		log.Printf("Неверный формат данных клиента: ожидалось 14 полей, получено %d", len(parts))
 		s.sendLowVersionResponse(conn)
 		return nil
 	}
@@ -359,16 +364,22 @@ func (s *Server) initializeClient(conn *websocket.Conn, clientData []byte) *Clie
 
 	// Создание клиента
 	client := &Client{
-		conn:        conn,
-		name:        parts[1],
-		appearances: parts[2],
-		weaponHand:  parts[3],
-		voice:       parts[4],
-		isFemale:    parts[5],
-		privateKey:  privateKey,
-		PublicKey:   &privateKey.PublicKey,
-		server:      s,
-		lastActive:  time.Now(),
+		conn:         conn,
+		name:         parts[1],
+		appearances:  parts[2],
+		weaponHand:   parts[3],
+		voice:        parts[4],
+		isFemale:     parts[5],
+		colors:       parts[7],
+		border_index: parts[8],
+		border_color: parts[9],
+		hands_index:  parts[10],
+		hands_color1: parts[11],
+		hands_color2: parts[12],
+		privateKey:   privateKey,
+		PublicKey:    &privateKey.PublicKey,
+		server:       s,
+		lastActive:   time.Now(),
 	}
 
 	// Регистрация клиента
@@ -400,7 +411,7 @@ func (s *Server) initializeClient(conn *websocket.Conn, clientData []byte) *Clie
 
 func (s *Server) validateClientData(parts []string, fullData []byte) bool {
 	sendedTime := parts[6]
-	hash := parts[7]
+	hash := parts[13]
 
 	parsedTime, err := time.Parse("2006-01-02T15:04:05", sendedTime)
 	if err != nil {
@@ -690,7 +701,6 @@ func main() {
 	} else {
 		fmt.Println("Сервер запущен на: http://localhost:8085")
 	}
-	go StartServerENET(server)
 	err := http.ListenAndServe(":8085", nil)
 	if err != nil {
 		log.Fatal("Ошибка при запуске сервера:", err)

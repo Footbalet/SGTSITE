@@ -505,3 +505,11 @@ func (s *Server) sendConnection(client *Client, msg string) {
 	player := s.clientPool.Get(player_id)
 	player.sendMessage(fmt.Sprintf("%s", msg))
 }
+
+func (s *Server) lostConnection(client *Client, msg string) {
+	logDebug("Потеряно соединение с: %d", client.id)
+
+	room := s.getRoomOrNull(client, client.currentRoom)
+	roomHost := room.owner
+	roomHost.sendMessage(fmt.Sprintf("reconnetion%d", client.id))
+}

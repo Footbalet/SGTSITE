@@ -289,7 +289,7 @@ func (s *Server) currentRoom(client *Client, msg string) {
 			ready = "V"
 		}
 
-		playersBuilder.WriteString(fmt.Sprintf("%s%s*%d*%s*%s*%s*%s*%s|",
+		playersBuilder.WriteString(fmt.Sprintf("%s%s*%d*%s*%s*%s*%s*%s*%s*%s*%s*%s*%s*%s|",
 			ready,
 			resident.name,
 			resident.id,
@@ -298,6 +298,12 @@ func (s *Server) currentRoom(client *Client, msg string) {
 			resident.voice,
 			resident.team,
 			resident.isFemale,
+			resident.colors,
+			resident.border_index,
+			resident.border_color,
+			resident.hands_index,
+			resident.hands_color1,
+			resident.hands_color2,
 		))
 	}
 
@@ -382,7 +388,7 @@ func (s *Server) joinGame(client *Client, msg string) {
 	client.sendMessage(cmdGameStarted)
 
 	// Формируем данные игрока
-	playerData := fmt.Sprintf("%s*%d*%s*%s*%s*%s*%s",
+	playerData := fmt.Sprintf("%s*%d*%s*%s*%s*%s*%s*%s*%s*%s*%s*%s*%s",
 		client.name,
 		client.id,
 		client.appearances,
@@ -390,6 +396,12 @@ func (s *Server) joinGame(client *Client, msg string) {
 		client.voice,
 		client.isFemale,
 		client.team,
+		client.colors,
+		client.border_index,
+		client.border_color,
+		client.hands_index,
+		client.hands_color1,
+		client.hands_color2,
 	)
 
 	// Уведомляем других игроков
