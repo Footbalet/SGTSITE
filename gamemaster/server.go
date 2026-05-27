@@ -422,7 +422,7 @@ func (s *Server) validateClientData(parts []string, fullData []byte) bool {
 	// Проверка разницы во времени
 	if time.Since(parsedTime).Abs() > 60*time.Second {
 		log.Printf("Слишком большая разница во времени: %v", time.Since(parsedTime).Abs())
-		return false
+		//return false
 	}
 
 	// Вычисляем хеш
