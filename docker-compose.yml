@@ -59,8 +59,6 @@ services:
       - "8085:8085/tcp"
       - "7777:7777/udp"
       - "3478:3478/udp"
-      - "3478:3478/tcp"
-      - "49152-65535:49152-65535/udp"
     depends_on:
       postgres:
         condition: service_healthy
