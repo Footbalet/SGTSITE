@@ -32,14 +32,6 @@ const turnSecretKey = "your-super-secret-key-change-this"
 func (ms *Server) startTurnServerSimple(publicIP string, port int) {
 	// Статические пользователи (сгенерируйте один раз)
 	realm := "lifefirelea-tuRN.com"
-	users := map[string]string{
-		"game_client": "strong_password_here_123!",
-		"game_test":   "test_password_456!",
-	}
-
-	for username, password := range users {
-		ms.turnCredentials[username] = turn.GenerateAuthKey(username, realm, password)
-	}
 
 	authHandler := func(username string, realm string, srcAddr net.Addr) ([]byte, bool) {
 		log.Printf("TURN аутентификация: username=%s, realm=%s", username, realm)
