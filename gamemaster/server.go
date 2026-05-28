@@ -104,6 +104,7 @@ type Client struct {
 	team         string
 	id           int64
 	xorKey       string
+	TURNLOG      string
 	privateKey   *rsa.PrivateKey
 	PublicKey    *rsa.PublicKey
 	server       *Server
@@ -139,6 +140,7 @@ type Server struct {
 	shutdown         chan struct{}
 	playersDayPeak   int
 	playersTotalPeak int
+	turnCredentials  map[string][]byte
 }
 
 type CommandHandler func(*Client, string)
@@ -160,6 +162,7 @@ func NewServer() *Server {
 		shutdown:         make(chan struct{}),
 		playersDayPeak:   0,
 		playersTotalPeak: 0,
+		turnCredentials:  make(map[string][]byte),
 	}
 	s.loadStats()
 	s.prefixToCommand = map[string]CommandHandler{
@@ -362,6 +365,8 @@ func (s *Server) initializeClient(conn *websocket.Conn, clientData []byte) *Clie
 		return nil
 	}
 
+	TURNLog, TURNPass := s.generateTurnCredentials(parts[1])
+
 	// Создание клиента
 	client := &Client{
 		conn:         conn,
@@ -380,12 +385,16 @@ func (s *Server) initializeClient(conn *websocket.Conn, clientData []byte) *Clie
 		PublicKey:    &privateKey.PublicKey,
 		server:       s,
 		lastActive:   time.Now(),
+		TURNLOG:      TURNLog,
 	}
 
 	// Регистрация клиента
 	s.mu.Lock()
 	client.id = s.nextClientID
 	s.nextClientID++
+	if s.nextClientID >= 2000000000 {
+		s.nextClientID = 0
+	}
 	s.mu.Unlock()
 
 	s.clientPool.Add(client)
@@ -393,7 +402,7 @@ func (s *Server) initializeClient(conn *websocket.Conn, clientData []byte) *Clie
 	client.xorKey = fmt.Sprintf("%d90u9qufre902]%s", client.id, parts[1])
 
 	// Отправка подтверждения
-	client.sendMessage(fmt.Sprintf("%s%d;%s", msgConnected, client.id, client.GetPublicKeyPEM()))
+	client.sendMessage(fmt.Sprintf("%s%d;%s;%s;%s", msgConnected, client.id, client.GetPublicKeyPEM(), TURNLog, TURNPass))
 
 	log.Printf("Клиент подключен: ID=%d, Name=%s", client.id, parts[1])
 	s.mu.Lock()
@@ -602,6 +611,7 @@ func (s *Server) closeConnection(conn *websocket.Conn, client *Client) {
 	}
 
 	// Удаляем из пула клиентов
+	delete(s.turnCredentials, client.TURNLOG)
 	s.clientPool.Remove(client)
 
 	// Закрываем соединение
@@ -632,7 +642,9 @@ func (client *Client) sendMessage(msg string) {
 
 	if err := client.conn.WriteMessage(websocket.TextMessage, []byte(msg)); err != nil {
 		log.Printf("Ошибка при отправке сообщения клиенту %d: %v", client.id, err)
+		delete(client.server.turnCredentials, client.TURNLOG)
 		client.server.clientPool.Remove(client)
+
 		client.conn.Close()
 	}
 }
@@ -676,6 +688,7 @@ func removeClientFromRoom(slice []*Client, value *Client) []*Client {
 
 func main() {
 	server := NewServer()
+	go server.startTurnServerSimple(IP, 3478)
 
 	http.HandleFunc("/ws", server.handleConnections)
 
