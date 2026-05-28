@@ -688,7 +688,7 @@ func removeClientFromRoom(slice []*Client, value *Client) []*Client {
 
 func main() {
 	server := NewServer()
-	go server.startTurnServerSimple(IP, 3478)
+	go server.startTurnServerSimple("0.0.0.0", 3478)
 
 	http.HandleFunc("/ws", server.handleConnections)
 
