@@ -8,6 +8,7 @@ WORKDIR /app
 COPY server.go .
 COPY playerControl.go .
 COPY roomControl.go .
+COPY TURN.go .
 COPY go.mod go.sum ./
 
 RUN go mod download
