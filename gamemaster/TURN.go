@@ -24,7 +24,7 @@ func createUDPListener(port int) net.PacketConn {
 	return conn
 }
 
-var IP = "192.168.0.105"
+var IP = "0.0.0.0"
 
 // Секретный ключ для генерации паролей (храните в безопасности!)
 const turnSecretKey = "your-super-secret-key-change-this"
