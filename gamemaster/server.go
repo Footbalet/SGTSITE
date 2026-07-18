@@ -200,6 +200,7 @@ func NewServer() *Server {
 		"send_candidate":           s.sendCandidate,
 		"send_connection":          s.sendConnection,
 		"lost_connection":          s.lostConnection,
+		"get_room":                 s.getRoom,
 	}
 
 	return s

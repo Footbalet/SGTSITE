@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -136,7 +137,7 @@ func (s *Server) changeRules(client *Client, msg string) {
 
 func (s *Server) showRoom(client *Client, msg string) {
 	logDebug("Показываем все комнаты")
-	searchParams := []string{"", "any_mode", "any_map", "0", "0"}
+	searchParams := []string{"", "any_mode", "any_map", "0", "0", "0"}
 	client.sendMessage(s.getRoomList(client, searchParams))
 }
 
@@ -144,6 +145,25 @@ func (s *Server) searchRooms(client *Client, msg string) {
 	logDebug("Ищем комнаты: %s", msg)
 	searchParams := strings.Split(msg, ";")
 	client.sendMessage(s.getRoomList(client, searchParams))
+}
+
+func (s *Server) getRoom(client *Client, msg string) {
+	searchParams := strings.Split(msg, ":")[1]
+	roomID, _ := strconv.ParseInt(searchParams, 10, 64)
+	room := s.getRoomOrNull(client, roomID)
+	if room != nil {
+		client.sendMessage(fmt.Sprintf("got_room%d;%d;%d;%s;%s;%t;%s",
+			roomID,
+			room.maxPlayers,
+			len(room.clients),
+			room.gameMode,
+			room.mapID,
+			room.started,
+			room.password,
+		))
+	} else {
+		client.sendMessage(fmt.Sprintf("got_roomno"))
+	}
 }
 
 func (s *Server) leaveRoom(client *Client, msg string) {
@@ -569,16 +589,10 @@ func (s *Server) getRoomList(client *Client, searchParams []string) string {
 	status := searchParams[3]
 	gameMap := searchParams[2]
 	gameMode := searchParams[1]
+	searchPage, _ := strconv.ParseInt(searchParams[5], 10, 64)
 
-	var builder strings.Builder
-	builder.WriteString(cmdShowRooms)
+	var builderMaps strings.Builder
 
-	builder.WriteString(fmt.Sprintf("%d;%d;%d;%d",
-		len(s.rooms),
-		s.clientPool.Size(),
-		s.playersDayPeak,
-		s.playersTotalPeak,
-	))
 	s.mu.RLock()
 	rooms := make(map[int64]*Room, len(s.rooms))
 	for id, room := range s.rooms {
@@ -586,7 +600,24 @@ func (s *Server) getRoomList(client *Client, searchParams []string) string {
 	}
 	s.mu.RUnlock()
 
-	for id, room := range rooms {
+	keys := make([]int64, 0, len(rooms))
+	for k := range rooms {
+		keys = append(keys, k)
+	}
+	sort.Slice(keys, func(i, j int) bool {
+		return keys[i] < keys[j]
+	})
+
+	limit := int64(22)
+	start_index := searchPage * limit
+	index := int64(0)
+
+	for _, id := range keys {
+		if start_index > 0 {
+			start_index -= 1
+			continue
+		}
+		room := rooms[id]
 		if checkExcluded(client, room) {
 			continue
 		}
@@ -615,17 +646,32 @@ func (s *Server) getRoomList(client *Client, searchParams []string) string {
 		if free == "1" && currentPlayers >= maxPlayers {
 			continue
 		}
-
-		builder.WriteString(fmt.Sprintf("\n%d;%d;%d;%s;%s;%t;%s",
-			id,
-			maxPlayers,
-			currentPlayers,
-			roomGameMode,
-			roomMapID,
-			roomStarted,
-			room.password,
-		))
+		if index < limit {
+			builderMaps.WriteString(fmt.Sprintf("\n%d;%d;%d;%s;%s;%t;%s",
+				id,
+				maxPlayers,
+				currentPlayers,
+				roomGameMode,
+				roomMapID,
+				roomStarted,
+				room.password,
+			))
+		}
+		index++
 	}
+
+	var builder strings.Builder
+	builder.WriteString(cmdShowRooms)
+
+	builder.WriteString(fmt.Sprintf("%d;%d;%d;%d;%d;%d%s",
+		len(s.rooms),
+		s.clientPool.Size(),
+		s.playersDayPeak,
+		s.playersTotalPeak,
+		searchPage,
+		index+searchPage*limit,
+		builderMaps.String(),
+	))
 
 	return builder.String()
 }
