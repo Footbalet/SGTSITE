@@ -630,6 +630,11 @@ func (s *Server) getRoomList(client *Client, searchParams []string) string {
 		maxPlayers := room.maxPlayers
 		room.mu.RUnlock()
 
+		//Комната только для полной версии
+		if client.demoVersion && !passDemoRooms(room) {
+			continue
+		}
+
 		// Применяем фильтры
 		if gameMode != "any_mode" && gameMode != roomGameMode {
 			continue
@@ -674,6 +679,33 @@ func (s *Server) getRoomList(client *Client, searchParams []string) string {
 	))
 
 	return builder.String()
+}
+
+func passDemoRooms(room *Room) bool {
+	if isAllowedDemoMode(room.gameMode) && isAllowedDemoMap(room.mapID) {
+		return true
+	}
+	return false
+}
+
+func isAllowedDemoMode(mode string) bool {
+	var allowedGameModes [4]string = [4]string{"OneForOne", "LastHero", "TeamOnTeam", "CaptureFlag"}
+	for _, m := range allowedGameModes {
+		if m == mode {
+			return true
+		}
+	}
+	return false
+}
+
+func isAllowedDemoMap(mapName string) bool {
+	var allowedGameModes [9]string = [9]string{"PassangerShip", "Park", "Dungeons", "Asteroid", "BadBlock", "Drednout", "GreatCathedral", "Library", "OceanStation"}
+	for _, m := range allowedGameModes {
+		if m == mapName {
+			return true
+		}
+	}
+	return false
 }
 
 // Вспомогательная функция для отладки

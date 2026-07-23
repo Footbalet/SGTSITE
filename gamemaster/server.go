@@ -109,6 +109,7 @@ type Client struct {
 	PublicKey    *rsa.PublicKey
 	server       *Server
 	lastActive   time.Time
+	demoVersion  bool
 }
 
 type Room struct {
@@ -340,7 +341,7 @@ func (s *Server) initializeClient(conn *websocket.Conn, clientData []byte) *Clie
 	parts := strings.Split(string(clientData), ";")
 
 	// Проверяем минимальное количество частей
-	if len(parts) < 2 || parts[0] != need_version {
+	if len(parts) < 2 || (parts[0] != need_version && parts[0] != "demo") {
 		log.Printf("Неверная версия клиента или недостаточно данных")
 		s.sendLowVersionResponse(conn)
 		return nil
@@ -388,7 +389,9 @@ func (s *Server) initializeClient(conn *websocket.Conn, clientData []byte) *Clie
 		lastActive:   time.Now(),
 		TURNLOG:      TURNLog,
 	}
-
+	if parts[0] == "demo" {
+		client.demoVersion = true
+	}
 	// Регистрация клиента
 	s.mu.Lock()
 	client.id = s.nextClientID
