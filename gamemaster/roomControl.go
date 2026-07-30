@@ -152,15 +152,19 @@ func (s *Server) getRoom(client *Client, msg string) {
 	roomID, _ := strconv.ParseInt(searchParams, 10, 64)
 	room := s.getRoomOrNull(client, roomID)
 	if room != nil {
-		client.sendMessage(fmt.Sprintf("got_room%d;%d;%d;%s;%s;%t;%s",
-			roomID,
-			room.maxPlayers,
-			len(room.clients),
-			room.gameMode,
-			room.mapID,
-			room.started,
-			room.password,
-		))
+		if client.demoVersion && !passDemoRooms(room) {
+			client.sendMessage(fmt.Sprintf("got_roomno"))
+		} else {
+			client.sendMessage(fmt.Sprintf("got_room%d;%d;%d;%s;%s;%t;%s",
+				roomID,
+				room.maxPlayers,
+				len(room.clients),
+				room.gameMode,
+				room.mapID,
+				room.started,
+				room.password,
+			))
+		}
 	} else {
 		client.sendMessage(fmt.Sprintf("got_roomno"))
 	}
