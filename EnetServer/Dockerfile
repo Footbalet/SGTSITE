@@ -12,7 +12,7 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /app
 
 # Копируем бинарники
-COPY builds/LFLServer.x86_64 .
+COPY LFLServer.x86_64 .
 
 # Даем права на выполнение
 RUN chmod +x MyGame.x86_64
