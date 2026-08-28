@@ -15,7 +15,7 @@ WORKDIR /app
 COPY LFLServer.x86_64 .
 
 # Даем права на выполнение
-RUN chmod +x MyGame.x86_64
+RUN chmod +x LFLServer.x86_64
 
 # Пробрасываем порты
 EXPOSE 8010
