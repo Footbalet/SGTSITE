@@ -67,7 +67,7 @@ services:
     restart: unless-stopped
 
   # Gameserver UDP (открываем порт для прямого подключения клиентов по UDP)
-  gamemasterUDP:
+  gamemaster_udp:
     build:
       context: ./EnetServer
       dockerfile: Dockerfile
