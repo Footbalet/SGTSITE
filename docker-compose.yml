@@ -66,6 +66,20 @@ services:
       - app-network
     restart: unless-stopped
 
+  # Gameserver UDP (открываем порт для прямого подключения клиентов по UDP)
+  gamemasterUDP:
+    build:
+      context: ./EnetServer
+      dockerfile: Dockerfile
+    container_name: lfl_udp
+    ports:
+      - "8010:8010/udp"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - app-network
+    restart: unless-stopped
   # Frontend React
   frontend:
     build:
