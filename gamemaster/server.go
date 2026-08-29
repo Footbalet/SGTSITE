@@ -368,7 +368,7 @@ func (s *Server) initializeClient(conn *websocket.Conn, clientData []byte) *Clie
 		return nil
 	}
 
-	TURNLog, TURNPass := s.generateTurnCredentials(parts[1])
+	//TURNLog, TURNPass := s.generateTurnCredentials(parts[1])
 
 	// Создание клиента
 	client := &Client{
@@ -389,7 +389,6 @@ func (s *Server) initializeClient(conn *websocket.Conn, clientData []byte) *Clie
 		PublicKey:    &privateKey.PublicKey,
 		server:       s,
 		lastActive:   time.Now(),
-		TURNLOG:      TURNLog,
 	}
 	if parts[0] == "demo" {
 		client.demoVersion = true
@@ -408,7 +407,7 @@ func (s *Server) initializeClient(conn *websocket.Conn, clientData []byte) *Clie
 	client.xorKey = fmt.Sprintf("%d90u9qufre902]%s", client.id, parts[1])
 
 	// Отправка подтверждения
-	client.sendMessage(fmt.Sprintf("%s%d;%s;%s;%s", msgConnected, client.id, client.GetPublicKeyPEM(), TURNLog, TURNPass))
+	client.sendMessage(fmt.Sprintf("%s%d;%s;%s;%s", msgConnected, client.id, client.GetPublicKeyPEM(), "", ""))
 
 	log.Printf("Клиент подключен: ID=%d, Name=%s", client.id, parts[1])
 	s.mu.Lock()
@@ -426,7 +425,7 @@ func (s *Server) initializeClient(conn *websocket.Conn, clientData []byte) *Clie
 
 func (s *Server) validateClientData(parts []string, fullData []byte) bool {
 	sendedTime := parts[6]
-	hash := parts[13]
+	hash := parts[14]
 
 	parsedTime, err := time.Parse("2006-01-02T15:04:05", sendedTime)
 	if err != nil {
@@ -694,7 +693,7 @@ func removeClientFromRoom(slice []*Client, value *Client) []*Client {
 
 func main() {
 	server := NewServer()
-	go server.startTurnServerSimple("0.0.0.0", 3478)
+	//go server.startTurnServerSimple("0.0.0.0", 3478)
 
 	http.HandleFunc("/ws", server.handleConnections)
 
