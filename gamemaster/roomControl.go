@@ -79,7 +79,7 @@ func (s *Server) createRoom(client *Client, msg string) {
 		maxPlayers: int(maxPlayers),
 		password:   hashPassword(parts[6]),
 		clients:    make([]*Client, 0, maxPlayers),
-		excluded:   make(map[*Client]bool),
+		excluded:   make(map[string]bool),
 		mu:         sync.RWMutex{},
 	}
 
@@ -151,6 +151,10 @@ func (s *Server) getRoom(client *Client, msg string) {
 	searchParams := strings.Split(msg, ":")[1]
 	roomID, _ := strconv.ParseInt(searchParams, 10, 64)
 	room := s.getRoomOrNull(client, roomID)
+	if checkExcluded(client, room) {
+		client.sendMessage(fmt.Sprintf("got_roomno"))
+		return
+	}
 	if room != nil {
 		if client.demoVersion && !passDemoRooms(room) {
 			client.sendMessage(fmt.Sprintf("got_roomno"))
@@ -580,7 +584,7 @@ func checkExcluded(client *Client, room *Room) bool {
 	room.mu.RLock()
 	defer room.mu.RUnlock()
 
-	_, excluded := room.excluded[client]
+	_, excluded := room.excluded[client.unique_id]
 	return excluded
 }
 

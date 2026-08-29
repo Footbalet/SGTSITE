@@ -277,9 +277,9 @@ func (s *Server) excludePlayer(client *Client, msg string) {
 
 	// Добавляем в исключенные (используем map для O(1) доступа)
 	if room.excluded == nil {
-		room.excluded = make(map[*Client]bool)
+		room.excluded = make(map[string]bool)
 	}
-	room.excluded[targetClient] = true
+	room.excluded[targetClient.unique_id] = true
 
 	// Удаляем из списка клиентов
 	if targetIndex >= 0 {

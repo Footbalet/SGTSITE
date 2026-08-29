@@ -110,12 +110,13 @@ type Client struct {
 	server       *Server
 	lastActive   time.Time
 	demoVersion  bool
+	unique_id    string
 }
 
 type Room struct {
 	owner      *Client
 	clients    []*Client
-	excluded   map[*Client]bool
+	excluded   map[string]bool
 	mapID      string
 	mapName    string
 	gameMode   string
@@ -347,8 +348,8 @@ func (s *Server) initializeClient(conn *websocket.Conn, clientData []byte) *Clie
 		return nil
 	}
 
-	if len(parts) != 14 {
-		log.Printf("Неверный формат данных клиента: ожидалось 14 полей, получено %d", len(parts))
+	if len(parts) != 15 {
+		log.Printf("Неверный формат данных клиента: ожидалось 15 полей, получено %d", len(parts))
 		s.sendLowVersionResponse(conn)
 		return nil
 	}
@@ -383,6 +384,7 @@ func (s *Server) initializeClient(conn *websocket.Conn, clientData []byte) *Clie
 		hands_index:  parts[10],
 		hands_color1: parts[11],
 		hands_color2: parts[12],
+		unique_id:    parts[13],
 		privateKey:   privateKey,
 		PublicKey:    &privateKey.PublicKey,
 		server:       s,
