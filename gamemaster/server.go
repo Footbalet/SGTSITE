@@ -22,7 +22,7 @@ import (
 const (
 	port_eney        = 12345
 	maxConn          = 32
-	need_version     = "1.0"
+	need_version     = "1.1"
 	port             = "8085"
 	readBufferSize   = 4096
 	writeBufferSize  = 4096
@@ -111,24 +111,27 @@ type Client struct {
 	lastActive   time.Time
 	demoVersion  bool
 	unique_id    string
+	is_authoian  string
 }
 
 type Room struct {
-	owner      *Client
-	clients    []*Client
-	excluded   map[string]bool
-	mapID      string
-	mapName    string
-	gameMode   string
-	rules      string
-	order      string
-	orderIndex int
-	maxPlayers int
-	started    bool
-	loaded     bool
-	password   string
-	remoteID   int64
-	mu         sync.RWMutex // Для безопасного доступа к комнате
+	owner       *Client
+	clients     []*Client
+	excluded    map[string]bool
+	mapID       string
+	mapName     string
+	gameMode    string
+	rules       string
+	order       string
+	orderIndex  int
+	maxPlayers  int
+	started     bool
+	was_started bool
+	loaded      bool
+	password    string
+	remoteID    int64
+	authorianID int64
+	mu          sync.RWMutex // Для безопасного доступа к комнате
 }
 
 type Server struct {
@@ -348,8 +351,8 @@ func (s *Server) initializeClient(conn *websocket.Conn, clientData []byte) *Clie
 		return nil
 	}
 
-	if len(parts) != 15 {
-		log.Printf("Неверный формат данных клиента: ожидалось 15 полей, получено %d", len(parts))
+	if len(parts) != 16 {
+		log.Printf("Неверный формат данных клиента: ожидалось 16 полей, получено %d", len(parts))
 		s.sendLowVersionResponse(conn)
 		return nil
 	}
@@ -385,10 +388,14 @@ func (s *Server) initializeClient(conn *websocket.Conn, clientData []byte) *Clie
 		hands_color1: parts[11],
 		hands_color2: parts[12],
 		unique_id:    parts[13],
+		is_authoian:  parts[14],
 		privateKey:   privateKey,
 		PublicKey:    &privateKey.PublicKey,
 		server:       s,
 		lastActive:   time.Now(),
+	}
+	if client.is_authoian == "true" {
+		client.name = ""
 	}
 	if parts[0] == "demo" {
 		client.demoVersion = true
@@ -425,7 +432,7 @@ func (s *Server) initializeClient(conn *websocket.Conn, clientData []byte) *Clie
 
 func (s *Server) validateClientData(parts []string, fullData []byte) bool {
 	sendedTime := parts[6]
-	hash := parts[14]
+	hash := parts[15]
 
 	parsedTime, err := time.Parse("2006-01-02T15:04:05", sendedTime)
 	if err != nil {

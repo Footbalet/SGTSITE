@@ -4,6 +4,8 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"log"
+	"os/exec"
 	"sort"
 	"strconv"
 	"strings"
@@ -151,27 +153,28 @@ func (s *Server) getRoom(client *Client, msg string) {
 	searchParams := strings.Split(msg, ":")[1]
 	roomID, _ := strconv.ParseInt(searchParams, 10, 64)
 	room := s.getRoomOrNull(client, roomID)
+	if room == nil {
+		client.sendMessage(fmt.Sprintf("got_roomno"))
+		return
+	}
 	if checkExcluded(client, room) {
 		client.sendMessage(fmt.Sprintf("got_roomno"))
 		return
 	}
-	if room != nil {
-		if client.demoVersion && !passDemoRooms(room) {
-			client.sendMessage(fmt.Sprintf("got_roomno"))
-		} else {
-			client.sendMessage(fmt.Sprintf("got_room%d;%d;%d;%s;%s;%t;%s",
-				roomID,
-				room.maxPlayers,
-				len(room.clients),
-				room.gameMode,
-				room.mapID,
-				room.started,
-				room.password,
-			))
-		}
-	} else {
+	if client.demoVersion && !passDemoRooms(room) {
 		client.sendMessage(fmt.Sprintf("got_roomno"))
+	} else {
+		client.sendMessage(fmt.Sprintf("got_room%d;%d;%d;%s;%s;%t;%s",
+			roomID,
+			room.maxPlayers,
+			len(room.clients),
+			room.gameMode,
+			room.mapID,
+			room.started,
+			room.password,
+		))
 	}
+
 }
 
 func (s *Server) leaveRoom(client *Client, msg string) {
@@ -194,17 +197,24 @@ func (s *Server) leaveRoom(client *Client, msg string) {
 	wasOwner := client == room.owner
 
 	// Проверяем, нужно ли сменить владельца
-	if wasOwner && len(room.clients) > 0 {
-		room.owner = room.clients[0]
+	if wasOwner && len(room.clients) > 1 {
+		if room.clients[0].is_authoian == "true" {
+			room.owner = room.clients[1]
+		} else {
+			room.owner = room.clients[0]
+		}
 	}
 
 	room.mu.Unlock()
 
 	// Если комната пуста, удаляем её
-	if len(room.clients) == 0 {
+	if len(room.clients) == 1 && room.was_started || len(room.clients) == 0 && !room.was_started {
 		s.mu.Lock()
 		delete(s.rooms, roomID)
 		s.mu.Unlock()
+		if len(room.clients) == 1 && room.was_started {
+			room.clients[0].sendMessage("close_window")
+		}
 		logDebug("Удалена пустая комната %d", roomID)
 	} else if room.started {
 		// Отправляем уведомление об уходе игрока
@@ -317,7 +327,7 @@ func (s *Server) currentRoom(client *Client, msg string) {
 			ready = "V"
 		}
 
-		playersBuilder.WriteString(fmt.Sprintf("%s%s*%d*%s*%s*%s*%s*%s*%s*%s*%s*%s*%s*%s|",
+		playersBuilder.WriteString(fmt.Sprintf("%s%s*%d*%s*%s*%s*%s*%s*%s*%s*%s*%s*%s*%s*%s|",
 			ready,
 			resident.name,
 			resident.id,
@@ -332,6 +342,7 @@ func (s *Server) currentRoom(client *Client, msg string) {
 			resident.hands_index,
 			resident.hands_color1,
 			resident.hands_color2,
+			resident.is_authoian,
 		))
 	}
 
@@ -372,6 +383,7 @@ func (s *Server) startGame(client *Client, msg string) {
 
 	room := s.getRoomOrNull(client, client.currentRoom)
 	if room == nil {
+
 		return
 	}
 
@@ -380,12 +392,14 @@ func (s *Server) startGame(client *Client, msg string) {
 	room.mu.RUnlock()
 
 	if !isOwner {
+
 		return
 	}
 
 	room.mu.Lock()
 	room.started = true
-	room.loaded = false
+	room.was_started = true
+	room.loaded = true
 	room.mu.Unlock()
 
 	// Отправляем уведомления игрокам
@@ -393,6 +407,14 @@ func (s *Server) startGame(client *Client, msg string) {
 	clients := make([]*Client, len(room.clients))
 	copy(clients, room.clients)
 	room.mu.RUnlock()
+
+	//cmd := exec.Command(".\\lfl.exe", "--headless", "--", "autority"+strconv.FormatInt(client.currentRoom, 10))
+	cmd := exec.Command(".\\lfl.x86-64", "--headless", "--", "autority"+strconv.FormatInt(client.currentRoom, 10))
+
+	err := cmd.Start()
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	for _, resident := range clients {
 		if resident.ready || resident == client {
@@ -408,7 +430,7 @@ func (s *Server) joinGame(client *Client, msg string) {
 	logDebug("Присоединяемся к игре")
 
 	room := s.getRoomOrNull(client, client.currentRoom)
-	if room == nil || !room.loaded {
+	if room == nil || (!room.loaded && client.is_authoian == "false") {
 		return
 	}
 
@@ -476,6 +498,7 @@ func (s *Server) endGame(client *Client, msg string) {
 
 	room.mu.Lock()
 	room.started = false
+	room.was_started = false
 	if isForce {
 		room.orderIndex = 0
 	}
@@ -518,7 +541,7 @@ func (s *Server) restartGame(client *Client, msg string) {
 	room.mu.RUnlock()
 	room.mu.Lock()
 	room.started = true
-	room.loaded = false
+	room.loaded = true
 	if nextMapOrder > -1 {
 		room.orderIndex = nextMapOrder
 		room.mapID = strings.Split(room.order, ":")[nextMapOrder]
@@ -635,6 +658,9 @@ func (s *Server) getRoomList(client *Client, searchParams []string) string {
 		roomMapID := room.mapID
 		roomStarted := room.started
 		currentPlayers := len(room.clients)
+		if roomStarted {
+			currentPlayers -= 1
+		}
 		maxPlayers := room.maxPlayers
 		room.mu.RUnlock()
 
