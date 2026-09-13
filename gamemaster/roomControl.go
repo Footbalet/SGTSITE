@@ -208,11 +208,11 @@ func (s *Server) leaveRoom(client *Client, msg string) {
 	room.mu.Unlock()
 
 	// Если комната пуста, удаляем её
-	if len(room.clients) == 1 && room.was_started || len(room.clients) == 0 && !room.was_started {
+	if len(room.clients) <= 1 && room.was_started || len(room.clients) == 0 && !room.was_started {
 		s.mu.Lock()
 		delete(s.rooms, roomID)
 		s.mu.Unlock()
-		if len(room.clients) == 1 && room.was_started {
+		if len(room.clients) <= 1 && room.was_started {
 			room.clients[0].sendMessage("close_window")
 		}
 		logDebug("Удалена пустая комната %d", roomID)
@@ -666,7 +666,7 @@ func (s *Server) getRoomList(client *Client, searchParams []string) string {
 		room.mu.RUnlock()
 
 		//Комната только для полной версии
-		if client.demoVersion && !passDemoRooms(room) {
+		if client.demoVersion && !passDemoRooms(room) || len(room.clients) <= 0 {
 			continue
 		}
 
