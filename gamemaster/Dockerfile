@@ -17,11 +17,19 @@ RUN go build -o server .
 # Финальный образ
 FROM alpine:latest
 
-RUN apk --no-cache add ca-certificates enet
+# Устанавливаем enet, сертификаты и gcompat для запуска glibc-бинарников
+RUN apk --no-cache add ca-certificates enet gcompat
 
 WORKDIR /root/
 
+# Копируем скомпилированный сервер
 COPY --from=builder /app/server .
+
+# Копируем ваш файл lfl.x86_64 из локальной папки в контейнер
+COPY lfl.x86_64 .
+
+# Даем права на исполнение (на всякий случай)
+RUN chmod +x lfl.x86_64
 
 EXPOSE 8085 7777 3478
 

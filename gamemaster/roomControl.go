@@ -409,13 +409,14 @@ func (s *Server) startGame(client *Client, msg string) {
 	room.mu.RUnlock()
 
 	//cmd := exec.Command(".\\lfl.exe", "--headless", "--", "autority"+strconv.FormatInt(client.currentRoom, 10))
-	cmd := exec.Command(".\\lfl.x86-64", "--headless", "--", "autority"+strconv.FormatInt(client.currentRoom, 10))
+	logDebug("Включаем хоста-авторитета")
+	cmd := exec.Command("./lfl.x86_64", "--headless", "--", "autority"+strconv.FormatInt(client.currentRoom, 10))
 
 	err := cmd.Start()
 	if err != nil {
 		log.Fatal(err)
 	}
-
+	logDebug("Хост-авторитет включен")
 	for _, resident := range clients {
 		if resident.ready || resident == client {
 			resident.ready = true
