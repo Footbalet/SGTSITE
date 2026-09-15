@@ -284,7 +284,7 @@ func (s *Server) enterRoom(client *Client, msg string) {
 	}
 
 	// Проверка пароля
-	if hasPassword {
+	if hasPassword && client.is_authoian == "false" {
 		if len(parts) < 3 || parts[2] == "" {
 			client.sendMessage(fmt.Sprintf("%s_passworded", cmdErrorEnterRoom))
 			return
