@@ -705,7 +705,7 @@ func (s *Server) getRoomList(client *Client, searchParams []string) string {
 
 	builder.WriteString(fmt.Sprintf("%d;%d;%d;%d;%d;%d%s",
 		len(s.rooms),
-		s.clientPool.Size(),
+		s.clientPool.SizeReal(),
 		s.playersDayPeak,
 		s.playersTotalPeak,
 		searchPage,

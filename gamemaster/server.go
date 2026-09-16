@@ -85,6 +85,18 @@ func (cp *ClientPool) Size() int {
 	return length
 }
 
+func (cp *ClientPool) SizeReal() int {
+	cp.mu.RLock()
+	defer cp.mu.RUnlock()
+	count := 0
+	for client, _ := range cp.clients {
+		if client.is_authoian == "false" {
+			count++
+		}
+	}
+	return count
+}
+
 type Client struct {
 	conn         *websocket.Conn
 	mu           sync.Mutex
@@ -246,7 +258,7 @@ func (s *Server) loadStats() {
 	s.playersTotalPeak = stats.PlayersTotalPeak
 	// Если сегодня новый день, начинаем с текущего количества
 	if stats.LastDate.Day() != time.Now().Day() {
-		s.playersDayPeak = s.clientPool.Size()
+		s.playersDayPeak = s.clientPool.SizeReal()
 	} else {
 		s.playersDayPeak = stats.LastDayPeak
 	}
@@ -418,12 +430,13 @@ func (s *Server) initializeClient(conn *websocket.Conn, clientData []byte) *Clie
 
 	log.Printf("Клиент подключен: ID=%d, Name=%s", client.id, parts[1])
 	s.mu.Lock()
-	if s.clientPool.Size() > s.playersTotalPeak {
-		s.playersTotalPeak = s.clientPool.Size()
+	size := s.clientPool.SizeReal()
+	if size > s.playersTotalPeak {
+		s.playersTotalPeak = size
 		s.saveStats()
 	}
-	if s.clientPool.Size() > s.playersDayPeak {
-		s.playersDayPeak = s.clientPool.Size()
+	if size > s.playersDayPeak {
+		s.playersDayPeak = size
 		s.saveStats()
 	}
 	s.mu.Unlock()
